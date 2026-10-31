@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Finance Dashboard</title>
+
+<style>
+body{
+font-family:Arial,sans-serif;
+background:#f4f6f9;
+margin:20px;
+}
+
+.header{
+background:#0078D4;
+color:white;
+padding:20px;
+text-align:center;
+border-radius:10px;
+margin-bottom:20px;
+}
+
+.container{
+display:flex;
+gap:20px;
+flex-wrap:wrap;
+margin-bottom:20px;
+}
+
+.card{
+background:white;
+padding:20px;
+width:220px;
+border-radius:10px;
+box-shadow:0 2px 5px rgba(0,0,0,0.2);
+}
+
+.value{
+font-size:28px;
+font-weight:bold;
+color:#0078D4;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+}
+
+table th,table td{
+border:1px solid #ddd;
+padding:8px;
+}
+
+table th{
+background:#0078D4;
+color:white;
+}
+
+button{
+background:#0078D4;
+color:white;
+border:none;
+padding:10px 15px;
+cursor:pointer;
+margin:5px;
+border-radius:5px;
+}
+
+input{
+padding:10px;
+margin:5px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<h1>Finance Dashboard</h1>
+</div>
+
+<div class="container">
+
+<div class="card">
+<div class="value" id="recordCount">0</div>
+<div>Total Records</div>
+</div>
+
+<div class="card">
+<div class="value" id="amountTotal">0</div>
+<div>Total Amount</div>
+</div>
+
+</div>
+
+<input type="file" id="csvFile" accept=".csv">
+<input type="text" id="searchBox" placeholder="Search...">
+
+<button onclick="downloadCSV()">Download CSV</button>
+
+<br><br>
+
+<table id="dataTable">
+<thead></thead>
+<tbody></tbody>
+</table>
+
+<script>
+
+let csvData=[];
+
+document.getElementById('csvFile').addEventListener('change',function(e){
+
+const file=e.target.files[0];
+
+const reader=new FileReader();
+
+reader.onload=function(event){
+
+const text=event.target.result;
+
+const rows=text.trim().split('\n');
+
+csvData=rows.map(row=>row.split(','));
+
+displayTable(csvData);
+
+calculateSummary(csvData);
+
+};
+
+reader.readAsText(file);
+
+});
+
+function displayTable(data){
+
+const thead=document.querySelector("#dataTable thead");
+const tbody=document.querySelector("#dataTable tbody");
+
+thead.innerHTML="";
+tbody.innerHTML="";
+
+let headerRow="<tr>";
+
+data[0].forEach(col=>{
+headerRow+=`<th>${col}</th>`;
+});
+
+headerRow+="</tr>";
+
+thead.innerHTML=headerRow;
+
+for(let i=1;i<data.length;i++){
+
+let row="<tr>";
+
+data[i].forEach(col=>{
+row+=`<td>${col}</td>`;
+});
+
+row+="</tr>";
+
+tbody.innerHTML+=row;
+}
+
+}
+
+function calculateSummary(data){
+
+document.getElementById("recordCount").innerText=data.length-1;
+
+let total=0;
+
+for(let i=1;i<data.length;i++){
+
+let row=data[i];
+
+row.forEach(cell=>{
+
+let value=parseFloat(cell.replace(/,/g,''));
+
+if(!isNaN(value))
+total+=value;
+
+});
+
+}
+
+document.getElementById("amountTotal").innerText=
+total.toLocaleString();
+
+}
+
+document.getElementById("searchBox").addEventListener("keyup",function(){
+
+let search=this.value.toLowerCase();
+
+let rows=document.querySelectorAll("#dataTable tbody tr");
+
+rows.forEach(row=>{
+
+let text=row.innerText.toLowerCase();
+
+row.style.display=text.includes(search) ? "" : "none";
+
+});
+
+});
+
+function downloadCSV(){
+
+if(csvData.length===0){
+alert("No Data Loaded");
+return;
+}
+
+let csvContent=csvData.map(row=>row.join(",")).join("\n");
+
+let blob=new Blob([csvContent],{type:"text/csv"});
+
+let link=document.createElement("a");
+
+link.href=URL.createObjectURL(blob);
+
+link.download="Dashboard_Data.csv";
+
+link.click();
+
+}
+
+</script>
+
+</body>
+</html>
